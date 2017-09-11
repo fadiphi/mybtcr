@@ -1,0 +1,10 @@
+Package: mybtcr
+Title: Collection of wrappers to easily use Rbitcon package
+Version: 0.0.1
+Authors@R: person("Fadi", "BARBARA", email = "fadi.barbara@gmail.com", role = "cre")
+Description: Collection of wrappers to easily use Rbitcon package. Need the private keys stored in a separate file
+Depends: R (>= 3.3.3), Rbitcoin
+License: GPL-v3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1.9000

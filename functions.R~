@@ -1,0 +1,101 @@
+#' Retrive wallet information
+#'
+#' @param none
+#' @keywords wallet bct
+#' get.wallet
+get.wallet <- function (){
+    market.api.process(market, currency.pair ,action = "wallet", key = api.key, secret = private.key)}
+
+#' Retrive ticker information
+#'
+#' It only display current highest bid and lowest ask
+#' 
+#' @param none
+#' @keywords wallet bct
+#' get.ticker
+get.ticker <- function(){market.api.process(market, currency.pair, "ticker")}
+get.trades <- function(){market.api.process(market,currency.pair,"trades")}
+get.order.book <- function(){market.api.process(market,currency.pair,"order_book")}
+plot.order.book <- function(){Rbitcoin.plot(get.order.book())}
+get.bids <- function(nn=10){head(get.order.book()$bids,n=nn)}
+get.asks <- function(nn=10){head(get.order.book()$asks,n=nn)}
+
+buy <- function(amount, price){market.api.process(market, currency.pair,
+                                                  action ="place_limit_order", 
+                                                  req = list(type = "buy",
+                                                             price = price,
+                                                             amount = amount),
+                                                  key = api.key, secret = private.key)}
+sell <- function(amount, price){market.api.process(market, currency.pair,
+                                                  action ="place_limit_order", 
+                                                  req = list(type = "sell",
+                                                             price = price,
+                                                             amount = amount),
+                                        key = api.key, secret = private.key)}
+open.orders <- function(){market.api.process(market, currency.pair, action = "open_orders", key = api.key, secret = private.key)}
+
+cancel.order <- function(c) {market.api.process(market, currency.pair,action = "cancel_order", 
+                                   req = list(oid = c),
+                                   key = api.key, secret = private.key)}
+
+
+get.graph <- function(t=1,id){
+## for reference https://www.kraken.com/help/api
+## 1. time in second from 0000UTC
+## 2. open
+## 3. high
+## 4. low
+## 5. close
+## 6. wwap
+## 7. volume
+## 8. count
+
+## available time frame interval in minutes
+## 1 (default), 5, 15, 30, 60, 240 (4h), 1440 (1D), 10080 (1W), 21600 (15D)
+
+
+
+    time.interval <- t
+    url <- paste('https://api.kraken.com/0/public/OHLC?pair=XBTEUR&interval=',time.interval,'&since=',id,sep='')
+
+    ## gives a list, reference on how to deal with it http://www.r-tutor.com/r-introduction/list
+    history <- market.api.query('kraken',url)
+
+    ## not the best way to access a list, but it's working
+
+    start <- 1
+    for (i in start:length(history$result$XXBTZEUR)){
+        if (i==start){
+            open <- as.numeric(history$result$XXBTZEUR[[i]][[2]])
+            high <- as.numeric(history$result$XXBTZEUR[[i]][[3]])
+            low <- as.numeric(history$result$XXBTZEUR[[i]][[4]])
+            close <- as.numeric(history$result$XXBTZEUR[[i]][[5]])
+
+            vol <- as.numeric(history$result$XXBTZEUR[[i]][[7]])
+            time.raw <- as.numeric(history$result$XXBTZEUR[[i]][[1]])
+        }
+        else{
+            open <- c(open,as.numeric(history$result$XXBTZEUR[[i]][[2]]))
+            high <- c(high,as.numeric(history$result$XXBTZEUR[[i]][[3]]))
+            low <- c(low,as.numeric(history$result$XXBTZEUR[[i]][[4]]))
+            close <- c(close,as.numeric(history$result$XXBTZEUR[[i]][[5]]))
+
+            vol <- c(vol,as.numeric(history$result$XXBTZEUR[[i]][[7]]))
+            time.raw <- c(time.raw,as.numeric(history$result$XXBTZEUR[[i]][[1]]))
+        }
+    }
+
+    ## create a xts to be used for quantmod
+    time <- as.POSIXct(time.raw,origin="1970-01-01")#,tz='UTC') #to make a time stamp from seconds
+    btc.series <- xts(diff(close),time[-1])
+    vol.series <- xts(vol,time)
+    ##
+    ## return close
+    
+    #candleChart(btc.series)
+    return(data.frame(time,open,high,low,close))
+##    candleChart(vol.series)
+    
+  ##  addVo()
+
+}
